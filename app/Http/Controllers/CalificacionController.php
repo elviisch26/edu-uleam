@@ -2,41 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCalificacionRequest;
+use App\Http\Requests\UpdateCalificacionRequest;
 use App\Models\Calificacion;
-use App\Models\Entrega;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Services\CalificacionService;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
+/**
+ * Controlador para gestionar las Calificaciones.
+ */
 class CalificacionController extends Controller
 {
     /**
+     * Servicio de calificaciones.
+     */
+    protected CalificacionService $calificacionService;
+
+    /**
+     * Constructor del controlador.
+     */
+    public function __construct(CalificacionService $calificacionService)
+    {
+        $this->calificacionService = $calificacionService;
+    }
+
+    /**
      * Almacena una nueva calificación para una entrega.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreCalificacionRequest $request): RedirectResponse
     {
-        $datos = $request->validate([
-            'entrega_id' => 'required|exists:entregas,id',
-            'calificacion' => 'required|numeric|between:0,10',
-            'retroalimentacion' => 'nullable|string|max:1000',
-        ]);
-        
-        $entrega = Entrega::findOrFail($datos['entrega_id']);
+        try {
+            $calificacion = $this->calificacionService->crearCalificacion(
+                $request->validated()
+            );
 
-        if ($entrega->tarea->user_id !== Auth::id()) {
-            abort(403, 'Acción no autorizada.');
+            $tareaId = $calificacion->entrega->tarea_id;
+
+            return redirect()
+                ->route('docente.tareas.show', $tareaId)
+                ->with('success', '¡Calificación guardada con éxito!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
         }
-
-        if ($entrega->calificacion) {
-            return back()->with('error', 'Esta tarea ya ha sido calificada.');
-        }
-
-        Calificacion::create($datos);
-
-        $tareaId = $entrega->tarea_id;
-        return redirect()->route('docente.tareas.show', $tareaId)
-                         ->with('success', '¡Calificación guardada con éxito!');
     }
 
     /**
@@ -44,9 +54,7 @@ class CalificacionController extends Controller
      */
     public function edit(Calificacion $calificacion): View
     {
-        if ($calificacion->entrega->tarea->user_id !== Auth::id()) {
-            abort(403, 'Acción no autorizada.');
-        }
+        $this->authorize('update', $calificacion);
 
         return view('docente.calificaciones.edit', compact('calificacion'));
     }
@@ -54,21 +62,19 @@ class CalificacionController extends Controller
     /**
      * Actualiza una calificación específica en la base de datos.
      */
-    public function update(Request $request, Calificacion $calificacion): RedirectResponse
+    public function update(UpdateCalificacionRequest $request, Calificacion $calificacion): RedirectResponse
     {
-        if ($calificacion->entrega->tarea->user_id !== Auth::id()) {
-            abort(403, 'Acción no autorizada.');
-        }
+        $this->authorize('update', $calificacion);
 
-        $datos = $request->validate([
-            'calificacion' => 'required|numeric|between:0,10',
-            'retroalimentacion' => 'nullable|string|max:1000',
-        ]);
-
-        $calificacion->update($datos);
+        $this->calificacionService->actualizarCalificacion(
+            $calificacion,
+            $request->validated()
+        );
 
         $tareaId = $calificacion->entrega->tarea_id;
-        return redirect()->route('docente.tareas.show', $tareaId)
-                         ->with('success', '¡Calificación actualizada correctamente!');
+
+        return redirect()
+            ->route('docente.tareas.show', $tareaId)
+            ->with('success', '¡Calificación actualizada correctamente!');
     }
 }

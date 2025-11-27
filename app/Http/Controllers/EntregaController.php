@@ -1,64 +1,90 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Tarea;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Entrega;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
-class EntregaController extends Controller {
-    public function create(Tarea $tarea) {
+use App\Http\Requests\StoreEntregaRequest;
+use App\Models\Entrega;
+use App\Models\Tarea;
+use App\Services\EntregaService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * Controlador para gestionar las Entregas.
+ */
+class EntregaController extends Controller
+{
+    /**
+     * Servicio de entregas.
+     */
+    protected EntregaService $entregaService;
+
+    /**
+     * Constructor del controlador.
+     */
+    public function __construct(EntregaService $entregaService)
+    {
+        $this->entregaService = $entregaService;
+    }
+
+    /**
+     * Muestra el formulario para crear una entrega.
+     */
+    public function create(Tarea $tarea): View|RedirectResponse
+    {
+        // Verificar si puede entregar
+        $verificacion = $this->entregaService->puedeEntregar($tarea);
+
+        if (!$verificacion['puede']) {
+            return redirect()
+                ->route('dashboard')
+                ->with('error', $verificacion['razon']);
+        }
+
         return view('estudiante.entrega.create', compact('tarea'));
     }
 
-    public function store(Request $request, Tarea $tarea) {
-        $request->validate([
-            'archivo_entrega' => 'required|file|mimes:pdf,zip|max:5120', // PDF o ZIP, max 5MB
-        ]);
-
-        $rutaArchivo = $request->file('archivo_entrega')->store('entregas', 'private');
-
-        $tarea->entregas()->create([
-            'user_id' => Auth::id(),
-            'ruta_archivo' => $rutaArchivo,
-        ]);
-
-        return redirect()->route('dashboard')->with('success', '¡Tarea entregada con éxito!');
-    }
-    public function show(Tarea $tarea) {
-    if ($tarea->user_id !== Auth::id()) {
-        abort(403);
-    }
-    $tarea->load('entregas.usuario');
-    return view('docente.tareas.show', compact('tarea'));
-}
- public function descargar(Entrega $entrega)
+    /**
+     * Almacena una nueva entrega.
+     */
+    public function store(StoreEntregaRequest $request, Tarea $tarea): RedirectResponse
     {
-        // --- CAPA 1 DE SEGURIDAD: AUTORIZACIÓN ---
-        // Nos aseguramos de que el profesor que intenta descargar
-        // es el mismo que creó la tarea original.
-        if (Auth::id() !== $entrega->tarea->user_id) {
-            abort(403, 'Acción no autorizada.');
-        }
+        try {
+            $this->entregaService->crearEntrega(
+                $tarea,
+                $request->file('archivo_entrega')
+            );
 
-        // --- CAPA 2 DE SEGURIDAD: VERIFICACIÓN DE ARCHIVO ---
-        // Verificamos que el archivo realmente exista en nuestro disco privado.
-        if (!Storage::disk('private')->exists($entrega->ruta_archivo)) {
-            abort(404, 'Archivo no encontrado.');
+            return redirect()
+                ->route('dashboard')
+                ->with('success', '¡Tarea entregada con éxito!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
         }
-        
-        // --- CONSTRUCCIÓN DEL NOMBRE DE ARCHIVO ---
-        // Para que el usuario no descargue un archivo con un nombre raro como "aBc123XyZ.pdf",
-        // vamos a construir un nombre de archivo descriptivo y limpio.
-        $nombreOriginal = pathinfo($entrega->ruta_archivo, PATHINFO_FILENAME);
-        $extension = pathinfo($entrega->ruta_archivo, PATHINFO_EXTENSION);
-        $nombreAmigable = "entrega_" . Str::slug($entrega->user->name) . "_tarea_" . $entrega->tarea->id . "." . $extension;
+    }
 
-        // --- LA DESCARGA ---
-        // Le decimos a Laravel que devuelva el archivo desde el disco 'private'
-        // con el nombre amigable que acabamos de construir.
-        return Storage::disk('private')->download($entrega->ruta_archivo, $nombreAmigable);
+    /**
+     * Muestra el detalle de una tarea con sus entregas.
+     */
+    public function show(Tarea $tarea): View|RedirectResponse
+    {
+        $this->authorize('view', $tarea);
+
+        $tarea->load('entregas.user');
+
+        return view('docente.tareas.show', compact('tarea'));
+    }
+
+    /**
+     * Descarga el archivo de una entrega.
+     */
+    public function descargar(Entrega $entrega)
+    {
+        $this->authorize('download', $entrega);
+
+        return $this->entregaService->descargarEntrega($entrega);
     }
 }

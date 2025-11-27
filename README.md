@@ -1,61 +1,372 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Gestion de Tareas Academicas
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Proyecto de Tecnologias Emergentes**
 
-## About Laravel
+Sistema web desarrollado con Laravel 12 para la gestion de tareas academicas, permitiendo a docentes crear y calificar tareas, y a estudiantes entregarlas y recibir retroalimentacion.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Descripcion del Proyecto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Este proyecto fue desarrollado como parte de la asignatura de Tecnologias Emergentes. Implementa un sistema completo de gestion de tareas academicas con las siguientes caracteristicas principales:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Sistema de autenticacion y autorizacion basado en roles (Admin/Docente/Estudiante)
+- Gestion completa de tareas (CRUD) con Soft Deletes
+- Sistema de entregas de tareas con carga de archivos
+- Sistema de calificaciones y retroalimentacion
+- Interfaz responsiva con Tailwind CSS
+- Editor de texto enriquecido con Trix
+- Arquitectura basada en Services, Policies y Form Requests
+- Suite de pruebas automatizadas con PHPUnit
 
-## Learning Laravel
+## Caracteristicas Principales
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Para Docentes
+- Crear, editar y eliminar tareas (con eliminacion logica)
+- Adjuntar archivos guia a las tareas
+- Visualizar todas las entregas de sus estudiantes
+- Calificar entregas y proporcionar retroalimentacion
+- Descargar archivos entregados por estudiantes
+- Editar calificaciones previamente asignadas
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Para Estudiantes
+- Ver todas las tareas disponibles
+- Entregar tareas con archivos adjuntos
+- Ver estado de sus entregas (dias restantes, estado de vencimiento)
+- Consultar calificaciones y retroalimentacion recibida
+- Acceso a archivos guia proporcionados por docentes
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Arquitectura del Proyecto
 
-## Laravel Sponsors
+El proyecto implementa una arquitectura limpia siguiendo las mejores practicas de Laravel:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```
+app/
+├── Enums/
+│   └── RolEnum.php              # Enumeracion de roles del sistema
+├── Http/
+│   ├── Controllers/
+│   │   ├── DashboardController.php   # Controlador dedicado para dashboard
+│   │   ├── TareaController.php       # Gestion de tareas
+│   │   ├── EntregaController.php     # Gestion de entregas
+│   │   └── CalificacionController.php # Gestion de calificaciones
+│   ├── Requests/
+│   │   ├── StoreTareaRequest.php     # Validacion crear tarea
+│   │   ├── UpdateTareaRequest.php    # Validacion actualizar tarea
+│   │   ├── StoreEntregaRequest.php   # Validacion crear entrega
+│   │   └── Store/UpdateCalificacionRequest.php
+│   └── Middleware/
+│       └── CheckRole.php             # Middleware de verificacion de rol
+├── Models/
+│   ├── User.php                 # Con relaciones y factory states
+│   ├── Tarea.php                # Con SoftDeletes, accessors y scopes
+│   ├── Entrega.php              # Con SoftDeletes y accessors
+│   ├── Calificacion.php         # Con SoftDeletes y accessors
+│   └── Rol.php                  # Modelo de roles
+├── Policies/
+│   ├── TareaPolicy.php          # Autorizacion para tareas
+│   ├── EntregaPolicy.php        # Autorizacion para entregas
+│   └── CalificacionPolicy.php   # Autorizacion para calificaciones
+├── Services/
+│   ├── TareaService.php         # Logica de negocio de tareas
+│   ├── EntregaService.php       # Logica de negocio de entregas
+│   └── CalificacionService.php  # Logica de negocio de calificaciones
+└── Traits/
+    └── HasFiles.php             # Trait reutilizable para manejo de archivos
+```
 
-### Premium Partners
+## Tecnologias Utilizadas
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Backend
+- **PHP** 8.2+
+- **Laravel** 12.0
+- **Laravel Breeze** - Sistema de autenticacion
+- **SQLite/MySQL/PostgreSQL** - Base de datos
 
-## Contributing
+### Frontend
+- **Blade Templates** - Motor de plantillas
+- **Tailwind CSS** 3.x - Framework CSS
+- **Alpine.js** - Framework JavaScript
+- **Trix Editor** - Editor de texto enriquecido
+- **Vite** - Build tool
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Testing
+- **PHPUnit** - Framework de pruebas
+- **Laravel Testing** - Helpers de testing
+- **47 tests** con 104 aserciones
 
-## Code of Conduct
+## Requisitos del Sistema
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- PHP >= 8.2
+- Composer
+- Node.js >= 18.x
+- NPM o Yarn
+- SQLite 3 / MySQL >= 8.0 / PostgreSQL >= 13
+- Extensiones PHP: OpenSSL, PDO, Mbstring, Tokenizer, XML, Ctype, JSON, BCMath, Fileinfo
 
-## Security Vulnerabilities
+## Instalacion
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 1. Clonar el repositorio
 
-## License
+```bash
+git clone https://github.com/elviisch26/edu-uleam.git
+cd edu-uleam
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 2. Instalar dependencias
+
+```bash
+composer install
+npm install
+```
+
+### 3. Configurar variables de entorno
+
+```bash
+cp .env.example .env
+```
+
+Para SQLite (recomendado para desarrollo):
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+```
+
+Para MySQL:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=edu_uleam
+DB_USERNAME=tu_usuario
+DB_PASSWORD=tu_contraseña
+```
+
+### 4. Generar key y preparar base de datos
+
+```bash
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+```
+
+### 5. Compilar assets
+
+```bash
+# Desarrollo
+npm run dev
+
+# Produccion
+npm run build
+```
+
+### 6. Iniciar el servidor
+
+```bash
+php artisan serve
+```
+
+La aplicacion estara disponible en `http://localhost:8000`
+
+## Estructura de la Base de Datos
+
+### Tablas Principales
+
+| Tabla | Descripcion |
+|-------|-------------|
+| usuarios | Usuarios del sistema con rol asignado |
+| roles | Roles disponibles (admin, docente, estudiante) |
+| tareas | Tareas creadas por docentes |
+| entregas | Entregas realizadas por estudiantes |
+| calificaciones | Calificaciones asignadas a entregas |
+
+### Caracteristicas de la Base de Datos
+- **Soft Deletes** en tareas, entregas y calificaciones
+- **Indices** optimizados para consultas frecuentes
+- **Restricciones de integridad** referencial
+- **Timestamps** automaticos
+
+## Configuracion de Roles
+
+El sistema maneja tres roles principales:
+
+| Rol | ID | Permisos |
+|-----|-----|----------|
+| admin | 1 | Acceso completo al sistema |
+| docente | 2 | Crear tareas, ver entregas, calificar |
+| estudiante | 3 | Ver tareas, realizar entregas, ver calificaciones |
+
+### Crear usuarios de prueba
+
+```bash
+php artisan tinker
+```
+
+```php
+// Crear un docente
+App\Models\User::factory()->docente()->create([
+    'name' => 'Profesor Test',
+    'email' => 'docente@test.com',
+]);
+
+// Crear un estudiante
+App\Models\User::factory()->estudiante()->create([
+    'name' => 'Estudiante Test',
+    'email' => 'estudiante@test.com',
+]);
+```
+
+## Testing
+
+El proyecto incluye una suite completa de pruebas:
+
+```bash
+# Ejecutar todas las pruebas
+php artisan test
+
+# Ejecutar con cobertura
+php artisan test --coverage
+
+# Ejecutar pruebas especificas
+php artisan test --filter=TareaControllerTest
+```
+
+### Pruebas Incluidas
+
+- **Unit Tests**: TareaTest (modelos, accessors, scopes)
+- **Feature Tests**: 
+  - TareaControllerTest (CRUD completo)
+  - EntregaControllerTest (entregas y descargas)
+  - AuthenticationTest (login, logout)
+  - RegistrationTest (registro de usuarios)
+  - ProfileTest (edicion de perfil)
+  - PasswordResetTest (recuperacion de contraseña)
+
+## Rutas de la API
+
+### Rutas Publicas
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/` | Redirige al login |
+| GET | `/login` | Pagina de inicio de sesion |
+| GET | `/register` | Pagina de registro |
+
+### Rutas de Docentes (Prefijo: /docente)
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/docente/tareas` | Listado de tareas |
+| GET | `/docente/tareas/create` | Formulario crear tarea |
+| POST | `/docente/tareas` | Guardar nueva tarea |
+| GET | `/docente/tareas/{tarea}` | Ver detalles y entregas |
+| GET | `/docente/tareas/{tarea}/edit` | Editar tarea |
+| PUT | `/docente/tareas/{tarea}` | Actualizar tarea |
+| DELETE | `/docente/tareas/{tarea}` | Eliminar tarea (soft delete) |
+| POST | `/docente/calificaciones` | Crear calificacion |
+| PUT | `/docente/calificaciones/{id}` | Actualizar calificacion |
+| GET | `/docente/entregas/{id}/descargar` | Descargar archivo |
+
+### Rutas de Estudiantes (Prefijo: /estudiante)
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/estudiante/tareas/{tarea}` | Ver detalle de tarea |
+| POST | `/estudiante/entregas/{tarea}` | Enviar entrega |
+
+## Middleware y Seguridad
+
+### CheckRole Middleware
+Verifica que el usuario tenga el rol adecuado:
+
+```php
+Route::middleware(['auth', 'rol:docente'])->group(function () {
+    // Solo docentes pueden acceder
+});
+```
+
+### Rate Limiting
+Las rutas estan protegidas con throttle para prevenir abusos:
+```php
+Route::middleware(['auth', 'rol:docente', 'throttle:60,1'])
+```
+
+### Policies
+Autorizacion granular mediante Policies:
+```php
+$this->authorize('update', $tarea);
+$this->authorize('view', $entrega);
+```
+
+## Almacenamiento de Archivos
+
+Los archivos se almacenan de forma segura:
+
+| Tipo | Ubicacion | Acceso |
+|------|-----------|--------|
+| Guias de tareas | `storage/app/public/guias/` | Publico |
+| Entregas | `storage/app/private/entregas/` | Privado |
+
+## Comandos Utiles
+
+```bash
+# Limpiar cache
+php artisan optimize:clear
+
+# Optimizar para produccion
+php artisan optimize
+composer install --optimize-autoloader --no-dev
+
+# Verificar codigo con Pint
+./vendor/bin/pint
+
+# Migraciones frescas con seeders
+php artisan migrate:fresh --seed
+
+# Ver rutas registradas
+php artisan route:list
+```
+
+## Despliegue en Produccion
+
+1. Configurar variables de entorno:
+   ```env
+   APP_ENV=production
+   APP_DEBUG=false
+   ```
+
+2. Optimizar la aplicacion:
+   ```bash
+   composer install --optimize-autoloader --no-dev
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   npm run build
+   ```
+
+3. Configurar permisos:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+## Contribuir
+
+1. Fork el proyecto
+2. Crear rama para feature (`git checkout -b feature/NuevaCaracteristica`)
+3. Commit de cambios (`git commit -m 'Agregar nueva caracteristica'`)
+4. Push a la rama (`git push origin feature/NuevaCaracteristica`)
+5. Abrir Pull Request
+
+## Licencia
+
+Este proyecto esta disponible bajo la licencia MIT.
+
+## Autor
+
+**Elvis Vinicio Intriago Chica**
+- GitHub: [@elviisch26](https://github.com/elviisch26)
+
+## Agradecimientos
+
+- Universidad Laica Eloy Alfaro de Manabi (ULEAM)
+- Materia: Tecnologias Emergentes
+- Framework Laravel y su comunidad
+
+---
+
+Desarrollado con Laravel 12 como proyecto academico para la materia de Tecnologias Emergentes.

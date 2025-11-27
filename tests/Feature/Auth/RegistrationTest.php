@@ -2,12 +2,23 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Rol;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Crear roles necesarios para el registro
+        Rol::create(['nombre' => 'admin']);
+        Rol::create(['nombre' => 'docente']);
+        Rol::create(['nombre' => 'estudiante']);
+    }
 
     public function test_registration_screen_can_be_rendered(): void
     {
