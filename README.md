@@ -358,7 +358,7 @@ Este proyecto esta disponible bajo la licencia MIT.
 
 ## Autor
 
-**Elvis Vinicio Intriago Chica**
+**Elvis **
 - GitHub: [@elviisch26](https://github.com/elviisch26)
 
 ## Agradecimientos
