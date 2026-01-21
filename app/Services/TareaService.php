@@ -109,6 +109,7 @@ class TareaService
     {
         return Auth::user()
             ->tareas()
+            ->with('materia')
             ->withCount('entregas')
             ->with(['entregas' => function ($query) {
                 $query->whereHas('calificacion');
@@ -125,7 +126,7 @@ class TareaService
      */
     public function obtenerDetalleTarea(Tarea $tarea): Tarea
     {
-        return $tarea->load(['entregas.user', 'entregas.calificacion']);
+        return $tarea->load(['entregas.user', 'entregas.calificacion', 'materia']);
     }
 
     /**

@@ -22,12 +22,17 @@
                             <div class="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 hover:shadow-md transition-all duration-200">
                                 {{-- Información de la Tarea --}}
                                 <div class="flex-grow">
-                                    <a href="{{ route('docente.tareas.show', $tarea) }}" class="text-lg font-bold text-indigo-700 hover:underline">
+                                    @if($tarea->materia)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 mb-1">
+                                            {{ $tarea->materia->codigo }} - {{ $tarea->materia->nombre }}
+                                        </span>
+                                    @endif
+                                    <a href="{{ route('docente.tareas.show', $tarea) }}" class="block text-lg font-bold text-indigo-700 hover:underline">
                                         {{ $tarea->titulo }}
                                     </a>
                                     <div class="mt-2 flex items-center text-sm text-gray-600">
                                         <svg class="w-4 h-4 mr-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span>Fecha Límite: {{ \Carbon\Carbon::parse($tarea->fecha_entrega)->format('d/m/Y') }}</span>
+                                        <span>Fecha Limite: {{ \Carbon\Carbon::parse($tarea->fecha_entrega)->format('d/m/Y') }}</span>
                                     </div>
                                 </div>
                                 

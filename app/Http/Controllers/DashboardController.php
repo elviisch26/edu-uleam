@@ -26,7 +26,7 @@ class DashboardController extends Controller
 
         return match ($user->rol->nombre) {
             'estudiante' => $this->estudianteDashboard(),
-            'docente' => redirect()->route('docente.tareas.index'),
+            'docente' => redirect()->route('docente.materias.index'),
             'admin' => $this->adminDashboard(),
             default => view('dashboard'),
         };
@@ -41,8 +41,12 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Obtener todas las tareas con eager loading optimizado
-        $tareas = Tarea::with(['docente:id,name'])
+        // Obtener IDs de las materias en las que el estudiante está inscrito
+        $materiasInscritasIds = $user->materiasInscritas()->pluck('materias.id');
+
+        // Obtener todas las tareas de las materias del estudiante con eager loading optimizado
+        $tareas = Tarea::with(['docente:id,name', 'materia'])
+            ->whereIn('materia_id', $materiasInscritasIds)
             ->latest()
             ->get();
 
@@ -88,12 +92,14 @@ class DashboardController extends Controller
     {
         $entregas = $user->entregas()->with('calificacion')->get();
         $calificaciones = $entregas->pluck('calificacion')->filter();
+        $materiasInscritasIds = $user->materiasInscritas()->pluck('materias.id');
 
         return [
             'total_entregas' => $entregas->count(),
             'entregas_calificadas' => $calificaciones->count(),
             'promedio' => $calificaciones->avg('calificacion') ?? 0,
             'tareas_pendientes' => Tarea::where('fecha_entrega', '>=', now())
+                ->whereIn('materia_id', $materiasInscritasIds)
                 ->whereNotIn('id', $entregas->pluck('tarea_id'))
                 ->count(),
         ];

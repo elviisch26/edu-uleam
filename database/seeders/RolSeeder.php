@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB; // ¡Importante importar DB!
+use Illuminate\Support\Facades\DB;
 
 class RolSeeder extends Seeder
 {
@@ -12,11 +12,13 @@ class RolSeeder extends Seeder
      */
     public function run(): void
     {
-        // Inserta los roles básicos de tu aplicación
-        DB::table('roles')->insert([
-            ['nombre' => 'admin'],
-            ['nombre' => 'docente'],
-            ['nombre' => 'estudiante'],
-        ]);
+        $roles = ['admin', 'docente', 'estudiante'];
+
+        foreach ($roles as $rol) {
+            DB::table('roles')->updateOrInsert(
+                ['nombre' => $rol],
+                ['nombre' => $rol]
+            );
+        }
     }
 }

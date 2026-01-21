@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Materia;
 use App\Models\Tarea;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -30,6 +31,7 @@ class TareaFactory extends Factory
             'descripcion' => fake()->paragraphs(3, true),
             'fecha_entrega' => fake()->dateTimeBetween('now', '+30 days'),
             'user_id' => User::factory(),
+            'materia_id' => Materia::factory(),
             'ruta_archivo_guia' => null,
             'nombre_archivo_guia' => null,
         ];

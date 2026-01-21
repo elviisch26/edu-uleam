@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 
-                <a href="{{ route('docente.tareas.index') }}" class="text-sm text-indigo-600 hover:underline mb-6 inline-block">← Volver a Mis Tareas</a>
+                <a href="{{ route('docente.materias.index') }}" class="text-sm text-indigo-600 hover:underline mb-6 inline-block">← Volver a Mis Materias</a>
 
                 <h3 class="text-xl font-bold">Instrucciones Originales</h3>
                 <p class="mt-2 text-gray-700 bg-gray-50 p-4 rounded-md">{{ $tarea->descripcion }}</p>

@@ -6,6 +6,7 @@ use App\Http\Controllers\TareaController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MateriaController;
 
 // Redirige la raíz al login
 Route::get('/', function () {
@@ -24,7 +25,19 @@ Route::middleware('auth')->group(function () {
 
 // -- GRUPO DE RUTAS PARA DOCENTES --
 Route::middleware(['auth', 'rol:docente', 'throttle:60,1'])->prefix('docente')->name('docente.')->group(function () {
-    Route::resource('tareas', TareaController::class);
+    // Materias (cards)
+    Route::get('materias', [MateriaController::class, 'index'])->name('materias.index');
+    Route::get('materias/create', [MateriaController::class, 'create'])->name('materias.create');
+    Route::post('materias', [MateriaController::class, 'store'])->name('materias.store');
+    Route::get('materias/{materia}', [MateriaController::class, 'show'])->name('materias.show');
+    
+    // Tareas dentro de una materia
+    Route::get('materias/{materia}/tareas/create', [TareaController::class, 'createForMateria'])->name('materias.tareas.create');
+    Route::post('materias/{materia}/tareas', [TareaController::class, 'storeForMateria'])->name('materias.tareas.store');
+    
+    // Tareas (rutas existentes para ver, editar, eliminar)
+    Route::resource('tareas', TareaController::class)->except(['index', 'create', 'store']);
+    
     Route::post('calificaciones', [CalificacionController::class, 'store'])->name('calificaciones.store');
     Route::get('/entregas/{entrega}/descargar', [EntregaController::class, 'descargar'])->name('entregas.descargar');
     Route::get('calificaciones/{calificacion}/edit', [CalificacionController::class, 'edit'])->name('calificaciones.edit');

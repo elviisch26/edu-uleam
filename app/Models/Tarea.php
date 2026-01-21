@@ -22,6 +22,7 @@ class Tarea extends Model
         'fecha_entrega',
         'ruta_archivo_guia',
         'nombre_archivo_guia',
+        'materia_id',
     ];
 
     /**
@@ -39,6 +40,14 @@ class Tarea extends Model
     public function docente(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Relación: Una Tarea pertenece a una Materia.
+     */
+    public function materia(): BelongsTo
+    {
+        return $this->belongsTo(Materia::class);
     }
 
     /**

@@ -26,11 +26,16 @@
                                     <div class="flex flex-col md:flex-row justify-between md:items-center">
                                         
                                         <div class="flex-grow">
+                                            @if($tarea->materia)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 mb-2">
+                                                    {{ $tarea->materia->codigo }} - {{ $tarea->materia->nombre }}
+                                                </span>
+                                            @endif
                                             <h4 class="text-lg font-bold text-indigo-700">{{ $tarea->titulo }}</h4>
                                             <p class="text-sm text-gray-600 mt-1">{{ Str::limit($tarea->descripcion, 150) }}</p>
                                             <div class="mt-2">
                                                 <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-700 bg-red-100">
-                                                    Fecha Límite: {{ \Carbon\Carbon::parse($tarea->fecha_entrega)->format('d/m/Y H:i') }}
+                                                    Fecha Limite: {{ \Carbon\Carbon::parse($tarea->fecha_entrega)->format('d/m/Y H:i') }}
                                                 </span>
                                             </div>
                                         </div>

@@ -14,10 +14,23 @@
                         @csrf
 
                         <div class="space-y-6">
+                            <!-- Materia -->
+                            <div>
+                                <x-input-label for="materia_id" :value="__('Materia')" />
+                                <select id="materia_id" name="materia_id" required class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                    <option value="">Seleccionar materia...</option>
+                                    @foreach($materias as $materia)
+                                        <option value="{{ $materia->id }}" {{ old('materia_id') == $materia->id ? 'selected' : '' }}>
+                                            {{ $materia->codigo }} - {{ $materia->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('materia_id')" class="mt-2" />
+                            </div>
+
                             <!-- Título de la Tarea -->
                             <div>
-                                <x-input-label for="titulo" :value="__('Título de la Tarea')" />
-                                {{-- En 'create', solo necesitamos old() para el valor --}}
+                                <x-input-label for="titulo" :value="__('Titulo de la Tarea')" />
                                 <x-text-input id="titulo" class="block mt-1 w-full" type="text" name="titulo" :value="old('titulo')" required autofocus />
                                 <x-input-error :messages="$errors->get('titulo')" class="mt-2" />
                             </div>
@@ -48,7 +61,7 @@
 
                         <!-- Botones de Acción -->
                         <div class="mt-8 flex justify-end space-x-4">
-                            <a href="{{ route('docente.tareas.index') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                            <a href="{{ route('docente.materias.index') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                                 Cancelar
                             </a>
                             <x-primary-button>

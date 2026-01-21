@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTareaRequest;
 use App\Http\Requests\UpdateTareaRequest;
+use App\Models\Materia;
 use App\Models\Tarea;
 use App\Services\TareaService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -29,36 +31,61 @@ class TareaController extends Controller
     }
 
     /**
-     * Muestra el listado de tareas del docente.
+     * Redirige al listado de materias (nuevo flujo).
      */
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        $tareas = $this->tareaService->obtenerTareasDocente();
-
-        return view('docente.tareas.index', compact('tareas'));
+        return redirect()->route('docente.materias.index');
     }
 
     /**
-     * Muestra el formulario para crear una nueva tarea.
+     * Muestra el formulario para crear tarea dentro de una materia.
      */
-    public function create(): View
+    public function createForMateria(Materia $materia): View
     {
-        return view('docente.tareas.create');
+        // Verificar que la materia pertenece al docente
+        if ($materia->docente_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('docente.materias.tareas.create', compact('materia'));
     }
 
     /**
-     * Almacena una nueva tarea.
+     * Almacena una nueva tarea para una materia especifica.
      */
-    public function store(StoreTareaRequest $request): RedirectResponse
+    public function storeForMateria(Request $request, Materia $materia): RedirectResponse
     {
+        // Verificar que la materia pertenece al docente
+        if ($materia->docente_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:255|min:5',
+            'descripcion' => 'required|string|min:10',
+            'fecha_entrega' => 'required|date|after:now',
+            'archivo_guia' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120',
+        ], [
+            'titulo.required' => 'El titulo es obligatorio.',
+            'titulo.min' => 'El titulo debe tener al menos 5 caracteres.',
+            'descripcion.required' => 'La descripcion es obligatoria.',
+            'descripcion.min' => 'La descripcion debe tener al menos 10 caracteres.',
+            'fecha_entrega.required' => 'La fecha de entrega es obligatoria.',
+            'fecha_entrega.after' => 'La fecha de entrega debe ser futura.',
+        ]);
+
+        // Agregar materia_id a los datos validados
+        $validated['materia_id'] = $materia->id;
+
         $this->tareaService->crearTarea(
-            $request->validated(),
+            $validated,
             $request->file('archivo_guia')
         );
 
         return redirect()
-            ->route('docente.tareas.index')
-            ->with('success', '¡Tarea creada con éxito!');
+            ->route('docente.materias.show', $materia)
+            ->with('success', 'Tarea creada exitosamente.');
     }
 
     /**
@@ -68,7 +95,7 @@ class TareaController extends Controller
     {
         $user = Auth::user();
 
-        // Lógica para el ESTUDIANTE
+        // Logica para el ESTUDIANTE
         if ($user->rol->nombre === 'estudiante') {
             $entregaRealizada = $user->entregas()
                 ->where('tarea_id', $tarea->id)
@@ -78,9 +105,8 @@ class TareaController extends Controller
             return view('estudiante.tareas.show', compact('tarea', 'entregaRealizada'));
         }
 
-        // Lógica para el DOCENTE
+        // Logica para el DOCENTE
         if ($user->rol->nombre === 'docente') {
-            // Verificar autorización usando Policy
             $this->authorize('view', $tarea);
 
             $tarea = $this->tareaService->obtenerDetalleTarea($tarea);
@@ -97,6 +123,7 @@ class TareaController extends Controller
     public function edit(Tarea $tarea): View
     {
         $this->authorize('update', $tarea);
+        $tarea->load('materia');
 
         return view('docente.tareas.edit', compact('tarea'));
     }
@@ -104,19 +131,29 @@ class TareaController extends Controller
     /**
      * Actualiza una tarea existente.
      */
-    public function update(UpdateTareaRequest $request, Tarea $tarea): RedirectResponse
+    public function update(Request $request, Tarea $tarea): RedirectResponse
     {
         $this->authorize('update', $tarea);
 
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:255|min:5',
+            'descripcion' => 'required|string|min:10',
+            'fecha_entrega' => 'required|date',
+            'archivo_guia' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120',
+        ]);
+
+        // Mantener la materia existente
+        $validated['materia_id'] = $tarea->materia_id;
+
         $this->tareaService->actualizarTarea(
             $tarea,
-            $request->validated(),
+            $validated,
             $request->file('archivo_guia')
         );
 
         return redirect()
-            ->route('docente.tareas.index')
-            ->with('success', '¡Tarea actualizada con éxito!');
+            ->route('docente.materias.show', $tarea->materia_id)
+            ->with('success', 'Tarea actualizada exitosamente.');
     }
 
     /**
@@ -125,11 +162,13 @@ class TareaController extends Controller
     public function destroy(Tarea $tarea): RedirectResponse
     {
         $this->authorize('delete', $tarea);
+        
+        $materiaId = $tarea->materia_id;
 
         $this->tareaService->eliminarTarea($tarea);
 
         return redirect()
-            ->route('docente.tareas.index')
-            ->with('success', '¡Tarea eliminada con éxito!');
+            ->route('docente.materias.show', $materiaId)
+            ->with('success', 'Tarea eliminada exitosamente.');
     }
 }

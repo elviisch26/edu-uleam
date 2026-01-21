@@ -9,6 +9,8 @@ Sistema web desarrollado con Laravel 12 para la gestion de tareas academicas, pe
 Este proyecto fue desarrollado como parte de la asignatura de Tecnologias Emergentes. Implementa un sistema completo de gestion de tareas academicas con las siguientes caracteristicas principales:
 
 - Sistema de autenticacion y autorizacion basado en roles (Admin/Docente/Estudiante)
+- Gestion de materias (asignaturas) asignadas a docentes
+- Inscripcion de estudiantes en materias
 - Gestion completa de tareas (CRUD) con Soft Deletes
 - Sistema de entregas de tareas con carga de archivos
 - Sistema de calificaciones y retroalimentacion
@@ -19,8 +21,15 @@ Este proyecto fue desarrollado como parte de la asignatura de Tecnologias Emerge
 
 ## Caracteristicas Principales
 
+### Sistema de Materias
+- Cada docente puede impartir una o mas materias
+- Los estudiantes se inscriben en materias especificas
+- Las tareas pertenecen a una materia del docente
+- Los estudiantes solo ven las tareas de sus materias inscritas
+
 ### Para Docentes
 - Crear, editar y eliminar tareas (con eliminacion logica)
+- Asignar tareas a sus materias
 - Adjuntar archivos guia a las tareas
 - Visualizar todas las entregas de sus estudiantes
 - Calificar entregas y proporcionar retroalimentacion
@@ -28,7 +37,7 @@ Este proyecto fue desarrollado como parte de la asignatura de Tecnologias Emerge
 - Editar calificaciones previamente asignadas
 
 ### Para Estudiantes
-- Ver todas las tareas disponibles
+- Ver todas las tareas de sus materias inscritas
 - Entregar tareas con archivos adjuntos
 - Ver estado de sus entregas (dias restantes, estado de vencimiento)
 - Consultar calificaciones y retroalimentacion recibida
@@ -57,6 +66,7 @@ app/
 │       └── CheckRole.php             # Middleware de verificacion de rol
 ├── Models/
 │   ├── User.php                 # Con relaciones y factory states
+│   ├── Materia.php              # Materias/asignaturas academicas
 │   ├── Tarea.php                # Con SoftDeletes, accessors y scopes
 │   ├── Entrega.php              # Con SoftDeletes y accessors
 │   ├── Calificacion.php         # Con SoftDeletes y accessors
@@ -172,11 +182,18 @@ La aplicacion estara disponible en `http://localhost:8000`
 
 | Tabla | Descripcion |
 |-------|-------------|
-| usuarios | Usuarios del sistema con rol asignado |
-| roles | Roles disponibles (admin, docente, estudiante) |
-| tareas | Tareas creadas por docentes |
+| users | Usuarios del sistema con rol asignado |
+| rols | Roles disponibles (admin, docente, estudiante) |
+| materias | Materias/asignaturas academicas |
+| materia_usuario | Tabla pivote para inscripciones de estudiantes |
+| tareas | Tareas creadas por docentes para sus materias |
 | entregas | Entregas realizadas por estudiantes |
 | calificaciones | Calificaciones asignadas a entregas |
+
+### Relaciones de Materias
+- Cada **materia** pertenece a un **docente** (belongsTo)
+- Cada **materia** puede tener muchos **estudiantes** (belongsToMany)
+- Cada **tarea** pertenece a una **materia** (belongsTo)
 
 ### Caracteristicas de la Base de Datos
 - **Soft Deletes** en tareas, entregas y calificaciones
@@ -195,6 +212,30 @@ El sistema maneja tres roles principales:
 | estudiante | 3 | Ver tareas, realizar entregas, ver calificaciones |
 
 ### Crear usuarios de prueba
+
+El sistema incluye un seeder con usuarios de prueba listos para usar. Al ejecutar `php artisan migrate --seed`, se crean los siguientes usuarios:
+
+### Credenciales de Prueba
+
+| Email | Password | Rol | Materias |
+|-------|----------|-----|----------|
+| carlos.mendoza@uleam.edu.ec | 12345678 | Admin | - |
+| claudia.ramirez@uleam.edu.ec | 12345678 | Docente | Tecnologias Emergentes, Desarrollo Web Avanzado |
+| roberto.silva@uleam.edu.ec | 12345678 | Docente | Base de Datos II, Programacion Orientada a Objetos |
+| maria.torres@uleam.edu.ec | 12345678 | Estudiante | Inscrita en todas las materias |
+| juan.perez@uleam.edu.ec | 12345678 | Estudiante | Tecnologias Emergentes, Desarrollo Web |
+| ana.garcia@uleam.edu.ec | 12345678 | Estudiante | Programacion, Base de Datos |
+
+### Materias Disponibles
+
+| Codigo | Nombre | Docente |
+|--------|--------|---------|
+| TEC-401 | Tecnologias Emergentes | Claudia Ramirez |
+| DWA-302 | Desarrollo Web Avanzado | Claudia Ramirez |
+| BD-202 | Base de Datos II | Roberto Silva |
+| POO-201 | Programacion Orientada a Objetos | Roberto Silva |
+
+### Crear usuarios adicionales con Tinker
 
 ```bash
 php artisan tinker

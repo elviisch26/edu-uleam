@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Materia;
 use App\Models\Tarea;
 use App\Models\User;
 use App\Models\Rol;
@@ -12,21 +13,35 @@ class TareaTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected Materia $materia;
+
     protected function setUp(): void
     {
         parent::setUp();
         
         // Crear roles base
         Rol::create(['nombre' => 'admin']);
-        Rol::create(['nombre' => 'docente']);
+        $rolDocente = Rol::create(['nombre' => 'docente']);
         Rol::create(['nombre' => 'estudiante']);
+
+        // Crear docente y materia base para las pruebas
+        $docente = User::factory()->create(['rol_id' => $rolDocente->id]);
+        $this->materia = Materia::create([
+            'codigo' => 'TEST-101',
+            'nombre' => 'Materia de Prueba',
+            'descripcion' => 'Descripcion de la materia de prueba',
+            'docente_id' => $docente->id,
+        ]);
     }
 
     public function test_tarea_pertenece_a_docente(): void
     {
         $rol = Rol::where('nombre', 'docente')->first();
         $docente = User::factory()->create(['rol_id' => $rol->id]);
-        $tarea = Tarea::factory()->create(['user_id' => $docente->id]);
+        $tarea = Tarea::factory()->create([
+            'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
+        ]);
 
         $this->assertInstanceOf(User::class, $tarea->docente);
         $this->assertEquals($docente->id, $tarea->docente->id);
@@ -37,7 +52,10 @@ class TareaTest extends TestCase
         $rol = Rol::where('nombre', 'docente')->first();
         $docente = User::factory()->create(['rol_id' => $rol->id]);
         
-        $tarea = Tarea::factory()->vencida()->create(['user_id' => $docente->id]);
+        $tarea = Tarea::factory()->vencida()->create([
+            'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
+        ]);
 
         $this->assertTrue($tarea->esta_vencida);
     }
@@ -49,6 +67,7 @@ class TareaTest extends TestCase
         
         $tarea = Tarea::factory()->create([
             'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
             'fecha_entrega' => now()->addDays(10),
         ]);
 
@@ -60,7 +79,10 @@ class TareaTest extends TestCase
         $rol = Rol::where('nombre', 'docente')->first();
         $docente = User::factory()->create(['rol_id' => $rol->id]);
         
-        $tarea = Tarea::factory()->conArchivoGuia()->create(['user_id' => $docente->id]);
+        $tarea = Tarea::factory()->conArchivoGuia()->create([
+            'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
+        ]);
 
         $this->assertTrue($tarea->tiene_archivo_guia);
     }
@@ -73,11 +95,13 @@ class TareaTest extends TestCase
         // Crear tareas activas y vencidas
         Tarea::factory()->count(3)->create([
             'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
             'fecha_entrega' => now()->addDays(10),
         ]);
         
         Tarea::factory()->count(2)->vencida()->create([
             'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
         ]);
 
         $tareasActivas = Tarea::activas()->count();
@@ -93,11 +117,13 @@ class TareaTest extends TestCase
         // Crear tareas activas y vencidas
         Tarea::factory()->count(3)->create([
             'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
             'fecha_entrega' => now()->addDays(10),
         ]);
         
         Tarea::factory()->count(2)->vencida()->create([
             'user_id' => $docente->id,
+            'materia_id' => $this->materia->id,
         ]);
 
         $tareasVencidas = Tarea::vencidas()->count();

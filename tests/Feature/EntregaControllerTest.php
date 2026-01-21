@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Entrega;
+use App\Models\Materia;
 use App\Models\Rol;
 use App\Models\Tarea;
 use App\Models\User;
@@ -18,6 +19,7 @@ class EntregaControllerTest extends TestCase
     protected User $docente;
     protected User $estudiante;
     protected Tarea $tarea;
+    protected Materia $materia;
 
     protected function setUp(): void
     {
@@ -31,9 +33,18 @@ class EntregaControllerTest extends TestCase
         $this->docente = User::factory()->create(['rol_id' => $rolDocente->id]);
         $this->estudiante = User::factory()->create(['rol_id' => $rolEstudiante->id]);
 
+        // Crear materia para el docente
+        $this->materia = Materia::create([
+            'codigo' => 'TEST-101',
+            'nombre' => 'Materia de Prueba',
+            'descripcion' => 'Descripcion de la materia de prueba',
+            'docente_id' => $this->docente->id,
+        ]);
+
         // Crear tarea de prueba
         $this->tarea = Tarea::factory()->create([
             'user_id' => $this->docente->id,
+            'materia_id' => $this->materia->id,
             'fecha_entrega' => now()->addDays(7),
         ]);
     }
@@ -87,6 +98,7 @@ class EntregaControllerTest extends TestCase
         // Crear tarea vencida
         $tareaVencida = Tarea::factory()->vencida()->create([
             'user_id' => $this->docente->id,
+            'materia_id' => $this->materia->id,
         ]);
 
         $response = $this->actingAs($this->estudiante)->post(
@@ -126,7 +138,16 @@ class EntregaControllerTest extends TestCase
         Storage::fake('private');
 
         $otroDocente = User::factory()->create(['rol_id' => $this->docente->rol_id]);
-        $otraTarea = Tarea::factory()->create(['user_id' => $otroDocente->id]);
+        $otraMateria = Materia::create([
+            'codigo' => 'TEST-102',
+            'nombre' => 'Otra Materia',
+            'descripcion' => 'Descripcion de otra materia',
+            'docente_id' => $otroDocente->id,
+        ]);
+        $otraTarea = Tarea::factory()->create([
+            'user_id' => $otroDocente->id,
+            'materia_id' => $otraMateria->id,
+        ]);
 
         $entrega = Entrega::factory()->create([
             'user_id' => $this->estudiante->id,
